@@ -118,6 +118,15 @@ export default function UsersPage() {
     onError: () => toast.error("Failed to update status"),
   });
 
+  const deleteUser = useMutation({
+    mutationFn: async (id: string) => api.delete(`/users/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success("User deleted");
+    },
+    onError: () => toast.error("Failed to delete user"),
+  });
+
   const inviteMutation = useMutation({
     mutationFn: async (data: InviteForm) => api.post("/auth/invite", data),
     onSuccess: (res) => {
@@ -266,6 +275,7 @@ export default function UsersPage() {
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead> // FIXED: add actions column
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -305,6 +315,15 @@ export default function UsersPage() {
                             <SelectItem value="INACTIVE">INACTIVE</SelectItem>
                           </SelectContent>
                         </Select>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="destructive"
+                          onClick={() => deleteUser.mutate(u._id)}
+                        >
+                          Delete
+                        </Button>{" "}
+                        // FIXED: add delete button
                       </TableCell>
                     </TableRow>
                   ))}

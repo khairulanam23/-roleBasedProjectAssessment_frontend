@@ -4,10 +4,30 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { toast } from "sonner";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTrigger,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -38,7 +58,7 @@ export default function ProjectManagementPage() {
 
   const { data: projects, isLoading } = useQuery<Project[]>({
     queryKey: ["projects"],
-    queryFn: async () => api.get("/projects").then(res => res.data),
+    queryFn: async () => api.get("/projects").then((res) => res.data),
   });
 
   const createMutation = useMutation({
@@ -52,14 +72,24 @@ export default function ProjectManagementPage() {
     onMutate: (data) => {
       // Optimistic update
       queryClient.setQueryData<Project[]>(["projects"], (old) => [
-        ...old || [],
-        { ...data, description: data.description || "", _id: 'temp', isDeleted: false, status: 'ACTIVE', createdBy: user!, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+        ...(old || []),
+        {
+          ...data,
+          description: data.description || "",
+          _id: "temp",
+          isDeleted: false,
+          status: "ACTIVE",
+          createdBy: user!,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
       ]);
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: ProjectForm & { id: string }) => api.patch(`/projects/${data.id}`, data),
+    mutationFn: async (data: ProjectForm & { id: string }) =>
+      api.patch(`/projects/${data.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       toast("Project updated");
@@ -77,7 +107,9 @@ export default function ProjectManagementPage() {
     },
     onMutate: (id) => {
       // Optimistic update
-      queryClient.setQueryData<Project[]>(["projects"], (old) => old?.filter(p => p._id !== id));
+      queryClient.setQueryData<Project[]>(["projects"], (old) =>
+        old?.filter((p) => p._id !== id),
+      );
     },
   });
 
@@ -106,35 +138,51 @@ export default function ProjectManagementPage() {
           <Button>Create Project</Button>
         </DialogTrigger>
         <DialogContent>
-          <DialogTitle>{editing ? "Edit Project" : "Create Project"}</DialogTitle>
+          <DialogTitle>
+            {editing ? "Edit Project" : "Create Project"}
+          </DialogTitle>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField name="name" control={form.control} render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField name="description" control={form.control} render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {(createMutation.isPending || updateMutation.isPending) && <Loader2 className="mr-2 animate-spin" />}
+              <FormField
+                name="name"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                name="description"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="submit"
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
+                {(createMutation.isPending || updateMutation.isPending) && (
+                  <Loader2 className="mr-2 animate-spin" />
+                )}
                 {editing ? "Update" : "Create"}
               </Button>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -142,21 +190,31 @@ export default function ProjectManagementPage() {
             <TableHead>Description</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Created By</TableHead>
+            <TableHead>Created At</TableHead> // FIXED: add timestamp column
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {projects?.map(p => (
+          {projects?.map((p) => (
             <TableRow key={p._id}>
               <TableCell>{p.name}</TableCell>
               <TableCell>{p.description}</TableCell>
               <TableCell>{p.status}</TableCell>
               <TableCell>{p.createdBy.name}</TableCell>
+              <TableCell>{new Date(p.createdAt).toLocaleString()}</TableCell> //
+              FIXED: display createdAt
               <TableCell>
-                {user?.role === 'ADMIN' && (
+                {user?.role === "ADMIN" && (
                   <>
-                    <Button variant="ghost" onClick={() => openEdit(p)}>Edit</Button>
-                    <Button variant="destructive" onClick={() => deleteMutation.mutate(p._id)}>Delete</Button>
+                    <Button variant="ghost" onClick={() => openEdit(p)}>
+                      Edit
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => deleteMutation.mutate(p._id)}
+                    >
+                      Delete
+                    </Button>
                   </>
                 )}
               </TableCell>
