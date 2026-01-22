@@ -1,5 +1,7 @@
 "use client";
 
+import { Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,12 +15,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useSearchParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 
 const registerSchema = z.object({
   name: z.string().min(1, "Name required"),
@@ -27,11 +27,10 @@ const registerSchema = z.object({
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
-export default function RegisterPage() {
+function RegisterContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const token = searchParams.get("token");
-  const [loading, setLoading] = useState(false);
+  const token = searchParams?.get("token");
 
   const form = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -43,7 +42,7 @@ export default function RegisterPage() {
       await api.post("/auth/register-via-invite", data);
     },
     onSuccess: () => {
-      toast("Registration successful. Please login.");
+      toast.success("Registration successful. Please login.");
       router.push("/login");
     },
     onError: (err: any) => {
@@ -53,8 +52,8 @@ export default function RegisterPage() {
 
   if (!token) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        Invalid invite link
+      <div className="flex min-h-screen items-center justify-center text-red-500">
+        Invalid or missing invite token
       </div>
     );
   }
@@ -111,5 +110,20 @@ export default function RegisterPage() {
         </Form>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="ml-2">Loading registration...</span>
+        </div>
+      }
+    >
+      <RegisterContent />
+    </Suspense>
   );
 }
