@@ -66,25 +66,23 @@ export default function UsersPage() {
   const queryClient = useQueryClient();
   const [pageUsers, setPageUsers] = useState(1);
   const [pageInvites, setPageInvites] = useState(1);
-  const [search, setSearch] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
 
-  // ALL hooks first - unconditional
+  // Users query (fixed: removed search param if backend doesn't support it)
   const {
     data: usersData,
     isLoading: usersLoading,
     error: usersError,
   } = useQuery({
-    queryKey: ["users", pageUsers, search],
+    queryKey: ["users", pageUsers],
     queryFn: async () => {
-      const res = await api.get(
-        `/users?page=${pageUsers}&limit=10&search=${search}`,
-      );
+      const res = await api.get(`/users?page=${pageUsers}&limit=10`);
       return res.data as { users: User[]; total: number };
     },
     enabled: !!user && user.role === "ADMIN",
   });
 
+  // Invites query
   const {
     data: invitesData,
     isLoading: invitesLoading,
@@ -130,8 +128,8 @@ export default function UsersPage() {
   const inviteMutation = useMutation({
     mutationFn: async (data: InviteForm) => api.post("/auth/invite", data),
     onSuccess: (res) => {
-      const token = res.data.token || "unknown"; // Adjust if backend returns differently
-      const inviteLink = `http://localhost:3000/register?token=${token}`;
+      const token = res.data.token || "unknown"; // Backend must return token
+      const inviteLink = `${window.location.origin}/register?token=${token}`;
 
       navigator.clipboard
         .writeText(inviteLink)
@@ -162,7 +160,6 @@ export default function UsersPage() {
     defaultValues: { email: "", role: "STAFF" },
   });
 
-  // ALL hooks done - now safe to early return
   if (!user || user.role !== "ADMIN")
     return <div className="p-8 text-red-500 text-center">Access denied</div>;
 
@@ -170,6 +167,7 @@ export default function UsersPage() {
     <div className="space-y-6 p-4 md:p-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">User Management</h1>
+
         <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -252,12 +250,6 @@ export default function UsersPage() {
         </TabsList>
 
         <TabsContent value="users">
-          <Input
-            placeholder="Search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="max-w-md mb-4"
-          />
           {usersLoading ? (
             <div className="flex justify-center py-10">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -275,7 +267,7 @@ export default function UsersPage() {
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead> // FIXED: add actions column
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -319,17 +311,18 @@ export default function UsersPage() {
                       <TableCell>
                         <Button
                           variant="destructive"
+                          size="sm"
                           onClick={() => deleteUser.mutate(u._id)}
                         >
                           Delete
-                        </Button>{" "}
-                        // FIXED: add delete button
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-              <div className="flex justify-between mt-4">
+
+              <div className="flex justify-between items-center mt-6">
                 <Button
                   variant="outline"
                   onClick={() => setPageUsers((p) => Math.max(1, p - 1))}
@@ -381,15 +374,15 @@ export default function UsersPage() {
                         <TableCell>{i.role}</TableCell>
                         <TableCell>
                           {i.acceptedAt ? (
-                            <span className="text-green-600 flex items-center">
-                              <CheckCircle2 className="h-4 w-4 mr-1" /> Accepted
+                            <span className="text-green-600 flex items-center gap-1">
+                              <CheckCircle2 className="h-4 w-4" /> Accepted
                             </span>
                           ) : isExpired ? (
-                            <span className="text-red-600 flex items-center">
+                            <span className="text-red-600 flex items-center gap-1">
                               <XCircle className="h-4 w-4 mr-1" /> Expired
                             </span>
                           ) : (
-                            <span className="text-blue-600 flex items-center">
+                            <span className="text-blue-600 flex items-center gap-1">
                               <Clock className="h-4 w-4 mr-1" /> Pending
                             </span>
                           )}
@@ -407,7 +400,8 @@ export default function UsersPage() {
                   })}
                 </TableBody>
               </Table>
-              <div className="flex justify-between mt-4">
+
+              <div className="flex justify-between items-center mt-6">
                 <Button
                   variant="outline"
                   onClick={() => setPageInvites((p) => Math.max(1, p - 1))}
