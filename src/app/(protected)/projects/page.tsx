@@ -190,7 +190,7 @@ export default function ProjectManagementPage() {
             <TableHead>Description</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Created By</TableHead>
-            <TableHead>Created At</TableHead> // FIXED: add timestamp column
+            <TableHead>Created At</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -201,8 +201,7 @@ export default function ProjectManagementPage() {
               <TableCell>{p.description}</TableCell>
               <TableCell>{p.status}</TableCell>
               <TableCell>{p.createdBy.name}</TableCell>
-              <TableCell>{new Date(p.createdAt).toLocaleString()}</TableCell> //
-              FIXED: display createdAt
+              <TableCell>{new Date(p.createdAt).toLocaleString()}</TableCell>
               <TableCell>
                 {user?.role === "ADMIN" && (
                   <>

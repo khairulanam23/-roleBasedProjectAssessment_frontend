@@ -68,7 +68,6 @@ export default function UsersPage() {
   const [pageInvites, setPageInvites] = useState(1);
   const [inviteOpen, setInviteOpen] = useState(false);
 
-  // Users query (fixed: removed search param if backend doesn't support it)
   const {
     data: usersData,
     isLoading: usersLoading,
@@ -128,7 +127,7 @@ export default function UsersPage() {
   const inviteMutation = useMutation({
     mutationFn: async (data: InviteForm) => api.post("/auth/invite", data),
     onSuccess: (res) => {
-      const token = res.data.token || "unknown"; // Backend must return token
+      const token = res.data.token || "unknown";
       const inviteLink = `${window.location.origin}/register?token=${token}`;
 
       navigator.clipboard
